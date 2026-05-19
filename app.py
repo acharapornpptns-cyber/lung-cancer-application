@@ -130,7 +130,7 @@ st.markdown("""
 # ==========================================
 # 2. ส่วนโหลดโมเดล AI (TensorFlow)
 # ==========================================
-CLASSES = ['Lung Normal (lung_n)', 'Lung Adenocarcinoma (lung_aca)', 'Lung Squamous Cell Carcinoma (lung_scc)']
+CLASSES = ['Lung Adenocarcinoma (lung_aca)', 'Lung Normal (lung_n)', 'Lung Squamous Cell Carcinoma (lung_scc)']
 IMG_SIZE = 128
 
 @st.cache_resource
@@ -162,7 +162,7 @@ uploaded_file = st.file_uploader("เลือกไฟล์ภาพ", type=["
 
 # แสดงรูปภาพพรีวิวเมื่อมีการอัปโหลด
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
+    image = Image.open(uploaded_file).convert("RGB")
     st.image(image, caption='ภาพเนื้อเยื่อที่อัปโหลด', use_container_width=True)
 
 # ปุ่มสั่ง Predict
@@ -175,9 +175,14 @@ if predict_btn:
     if uploaded_file is not None:
         with st.spinner('กำลังประมวลผลภาพ...'):
             # ทำ Preprocessing รูปภาพตามโมเดลของคุณ
-            img = image.resize((IMG_SIZE, IMG_SIZE))
-            img_array = np.array(img) / 255.0
-            img_array = np.expand_dims(img_array, axis=0)
+            img = image.convert("RGB")
+            img = img.resize((IMG_SIZE, IMG_SIZE))
+            img_array = np.array(img).astype(np.float32)
+            img_array = img_array / 255.0
+            img_array = np.expand_dims(
+                img_array,
+                axis=0
+                )
 
             # ให้โมเดลทายผล
             predictions = model.predict(img_array)
@@ -185,7 +190,7 @@ if predict_btn:
             confidence = np.max(predictions) * 100
             
             result_class = CLASSES[predicted_class_idx]
-            
+            st.write(predictions)
             # ปรับสีกล่องตามผลลัพธ์ (ถ้า Normal เป็นสีเขียว, ถ้าเป็นมะเร็งเป็นสีแดง)
             status_color = "#10B981" if "Normal" in result_class else "#EF4444"
 
